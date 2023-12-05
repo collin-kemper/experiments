@@ -1,6 +1,6 @@
 # Some Experiments On Neural Nets
 
-`param-trajectory.py` is very confusing, in that it seems to show that the
-fractal dimension of the parameters of a neural network being optimized is
-almost exactly 2, which is a strange coincidence that I feel like should have
-some explanation.
+`param-trajectory.py` shows how the fractal dimension of the trajectory that
+the model parameters take through parameter space while being optimized varies
+with different optimization algorithms. Somewhat expectedly, SGD has notably
+higher fractal dimension than Adam-style optimization algorithms.
