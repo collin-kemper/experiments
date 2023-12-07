@@ -1,0 +1,3 @@
+A wrong list helps substantially when chasing nines in accuracy.
+It is anti-helpful and substantially slows training when used too early, as it
+decreases the variety observed.

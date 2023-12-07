@@ -1,0 +1,142 @@
+wrong list from the beginning:
+iter 10593: loss 0.0404, acc 0.9727 time 44.26ms, mfu 13.80% True 514
+iter 10594: loss 0.0423, acc 0.9749 time 46.87ms, mfu 13.77% True 452
+iter 10595: loss 0.0516, acc 0.9675 time 44.64ms, mfu 13.81% True 558
+iter 10596: loss 0.0538, acc 0.9603 time 46.92ms, mfu 13.77% True 672
+
+Hypothesis: I think this is because diversity is really important
+for finding the true gradient, and a wrong list substantially decreases
+diversity. 
+However, when there is very little wrong, maybe it can help the reward signal.
+
+no wrong list:
+
+Wrong list after accuracy > 0.99
+
+iter 996: loss 0.2919, acc 0.8070 time 44.86ms, mfu 14.31% False 0
+iter 997: loss 0.2844, acc 0.8097 time 45.16ms, mfu 14.28% False 0
+iter 998: loss 0.2882, acc 0.8087 time 42.80ms, mfu 14.33% False 0
+iter 999: loss 0.2842, acc 0.8090 time 44.61ms, mfu 14.31% False 0
+step 1000: train loss 0.2855, val loss 0.2853, acc 0.8079
+saving checkpoint to out
+iter 1000: loss 0.2855, acc 0.8063 time 8064.33ms, mfu 12.88% False 0
+iter 1001: loss 0.2883, acc 0.8029 time 42.28ms, mfu 13.09% False 0
+iter 1002: loss 0.2804, acc 0.8104 time 45.38ms, mfu 13.17% False 0
+
+
+iter 1995: loss 0.2159, acc 0.8614 time 45.22ms, mfu 14.27% False 0
+iter 1996: loss 0.2178, acc 0.8624 time 44.54ms, mfu 14.26% False 0
+iter 1997: loss 0.2109, acc 0.8636 time 42.87ms, mfu 14.31% False 0
+iter 1998: loss 0.2220, acc 0.8516 time 45.07ms, mfu 14.28% False 0
+iter 1999: loss 0.2248, acc 0.8563 time 44.64ms, mfu 14.26% False 0
+step 2000: train loss 0.2042, val loss 0.2043, acc 0.8691
+saving checkpoint to out
+iter 2000: loss 0.2045, acc 0.8684 time 7949.39ms, mfu 12.84% False 0
+iter 2001: loss 0.2051, acc 0.8716 time 42.48ms, mfu 13.05% False 0
+iter 2002: loss 0.2103, acc 0.8605 time 45.01ms, mfu 13.14% False 0
+
+
+iter 2998: loss 0.1026, acc 0.9422 time 42.74ms, mfu 13.29% False 0
+iter 2999: loss 0.0858, acc 0.9510 time 45.26ms, mfu 13.35% False 0
+step 3000: train loss 0.0962, val loss 0.0965, acc 0.9450
+saving checkpoint to out
+iter 3000: loss 0.0920, acc 0.9482 time 7945.05ms, mfu 12.03% False 0
+iter 3001: loss 0.0974, acc 0.9433 time 42.86ms, mfu 12.30% False 0
+iter 3002: loss 0.0927, acc 0.9483 time 45.55ms, mfu 12.45% False 0
+
+
+iter 3998: loss 0.0123, acc 0.9945 time 43.18ms, mfu 14.69% False 0
+iter 3999: loss 0.0129, acc 0.9951 time 42.79ms, mfu 14.69% False 0
+step 4000: train loss 0.0178, val loss 0.0180, acc 0.9919
+saving checkpoint to out
+iter 4000: loss 0.0193, acc 0.9907 time 8132.71ms, mfu 13.23% True 147
+iter 4001: loss 0.0269, acc 0.9864 time 44.07ms, mfu 13.34% True 221
+
+
+iter 4997: loss 0.0023, acc 0.9995 time 47.27ms, mfu 13.86% True 10
+iter 4998: loss 0.0046, acc 0.9986 time 44.06ms, mfu 13.91% True 26
+iter 4999: loss 0.0040, acc 0.9989 time 46.13ms, mfu 13.89% True 22
+step 5000: train loss 0.0034, val loss 0.0035, acc 0.9989
+saving checkpoint to out
+iter 5000: loss 0.0034, acc 0.9990 time 7962.33ms, mfu 12.51% True 18
+iter 5001: loss 0.0088, acc 0.9970 time 44.04ms, mfu 12.69% True 40
+iter 5002: loss 0.0046, acc 0.9985 time 46.22ms, mfu 12.79% True 22
+
+
+iter 5998: loss 0.0009, acc 0.9996 time 46.16ms, mfu 13.92% True 7
+iter 5999: loss 0.0004, acc 0.9999 time 43.92ms, mfu 13.96% True 1
+step 6000: train loss 0.0019, val loss 0.0019, acc 0.9993
+saving checkpoint to out
+iter 6000: loss 0.0019, acc 0.9993 time 8108.84ms, mfu 12.57% True 13
+iter 6001: loss 0.0006, acc 0.9999 time 44.97ms, mfu 12.72% True 2
+iter 6002: loss 0.0006, acc 0.9998 time 46.97ms, mfu 12.79% True 4
+iter 6003: loss 0.0017, acc 0.9994 time 44.01ms, mfu 12.95% True 9
+
+
+iter 6997: loss 0.0018, acc 0.9995 time 44.18ms, mfu 13.98% True 9
+iter 6998: loss 0.0027, acc 0.9992 time 45.85ms, mfu 13.96% True 13
+iter 6999: loss 0.0005, acc 0.9998 time 44.39ms, mfu 13.99% True 3
+step 7000: train loss 0.0002, val loss 0.0002, acc 1.0000
+saving checkpoint to out
+iter 7000: loss 0.0002, acc 0.9999 time 7979.45ms, mfu 12.60% True 1
+iter 7001: loss 0.0029, acc 0.9995 time 44.00ms, mfu 12.77% True 10
+iter 7002: loss 0.0005, acc 0.9998 time 46.83ms, mfu 12.84% True 1
+iter 7003: loss 0.0006, acc 0.9997 time 44.62ms, mfu 12.97% True 2
+
+
+iter 7997: loss 0.0001, acc 1.0000 time 45.89ms, mfu 13.95% True 0
+iter 7998: loss 0.0000, acc 1.0000 time 44.15ms, mfu 13.98% True 0
+iter 7999: loss 0.0010, acc 0.9996 time 47.37ms, mfu 13.91% True 5
+step 8000: train loss 0.0004, val loss 0.0005, acc 0.9999
+saving checkpoint to out
+iter 8000: loss 0.0008, acc 0.9998 time 8095.32ms, mfu 12.53% True 2
+iter 8001: loss 0.0001, acc 1.0000 time 44.01ms, mfu 12.71% True 0
+
+
+iter 8996: loss 0.0006, acc 0.9998 time 44.28ms, mfu 13.92% True 3
+iter 8997: loss 0.0003, acc 0.9998 time 46.08ms, mfu 13.90% True 3
+iter 8998: loss 0.0002, acc 0.9999 time 44.34ms, mfu 13.93% True 1
+iter 8999: loss 0.0000, acc 1.0000 time 46.43ms, mfu 13.90% True 0
+step 9000: train loss 0.0000, val loss 0.0000, acc 1.0000
+saving checkpoint to out
+iter 9000: loss 0.0000, acc 1.0000 time 7983.29ms, mfu 12.51% True 0
+iter 9001: loss 0.0000, acc 1.0000 time 43.81ms, mfu 12.70% True 0
+iter 9002: loss 0.0005, acc 0.9998 time 46.36ms, mfu 12.79% True 3
+iter 9003: loss 0.0000, acc 1.0000 time 44.26ms, mfu 12.94% True 0
+iter 9004: loss 0.0005, acc 0.9999 time 46.96ms, mfu 12.99% True 2
+iter 9005: loss 0.0000, acc 1.0000 time 44.35ms, mfu 13.11% True 0
+iter 9006: loss 0.0001, acc 1.0000 time 46.02ms, mfu 13.17% True 0
+
+
+
+iter 10092: loss 0.0001, acc 0.9999 time 44.92ms, mfu 13.83% True 1
+iter 10093: loss 0.0000, acc 1.0000 time 46.24ms, mfu 13.82% True 0
+iter 10094: loss 0.0001, acc 1.0000 time 46.15ms, mfu 13.80% True 0
+iter 10095: loss 0.0005, acc 0.9998 time 44.25ms, mfu 13.85% True 3
+iter 10096: loss 0.0001, acc 1.0000 time 47.25ms, mfu 13.80% True 0
+iter 10097: loss 0.0001, acc 1.0000 time 44.17ms, mfu 13.85% True 0
+iter 10098: loss 0.0001, acc 0.9999 time 46.34ms, mfu 13.82% True 1
+iter 10099: loss 0.0001, acc 1.0000 time 44.75ms, mfu 13.85% True 0
+iter 10100: loss 0.0001, acc 1.0000 time 47.05ms, mfu 13.81% True 0
+iter 10101: loss 0.0001, acc 1.0000 time 44.43ms, mfu 13.85% True 0
+iter 10102: loss 0.0000, acc 1.0000 time 46.30ms, mfu 13.83% True 0
+iter 10103: loss 0.0000, acc 1.0000 time 44.12ms, mfu 13.87% True 0
+iter 10104: loss 0.0001, acc 1.0000 time 46.30ms, mfu 13.85% True 0
+iter 10105: loss 0.0000, acc 1.0000 time 45.20ms, mfu 13.86% True 0
+iter 10106: loss 0.0000, acc 1.0000 time 46.96ms, mfu 13.82% True 0
+
+
+
+
+without any wrong list:
+
+iter 4996: loss 0.0064, acc 0.9974 time 44.88ms, mfu 14.27% False 0
+iter 4997: loss 0.0081, acc 0.9962 time 44.93ms, mfu 14.25% False 0
+iter 4998: loss 0.0046, acc 0.9977 time 42.79ms, mfu 14.30% False 0
+iter 4999: loss 0.0044, acc 0.9978 time 44.96ms, mfu 14.27% False 0
+step 5000: train loss 0.0084, val loss 0.0085, acc 0.9966
+saving checkpoint to out
+iter 5000: loss 0.0084, acc 0.9958 time 7977.63ms, mfu 12.85% False 0
+iter 5001: loss 0.0110, acc 0.9961 time 42.47ms, mfu 13.05% False 0
+iter 5002: loss 0.0092, acc 0.9959 time 44.99ms, mfu 13.15% False 0
+iter 5003: loss 0.0055, acc 0.9976 time 45.21ms, mfu 13.23% False 0
