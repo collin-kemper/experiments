@@ -30,19 +30,21 @@ from torch.distributed import init_process_group, destroy_process_group
 
 from model import GPTConfig, GPT
 
+import dataloader
+
 torch.manual_seed(111)
 random.seed(111)
 
 # -----------------------------------------------------------------------------
 # default config values designed to train a gpt2 (124M) on OpenWebText
 # I/O
-out_dir = 'out'
+out_dir = 'out-test'
 eval_interval = 1000
 log_interval = 1
 eval_iters = 200
 eval_only = False # if True, script exits right after the first eval
 always_save_checkpoint = True # if True, always save a checkpoint after each eval
-init_from = 'resume' # 'scratch' or 'resume' or 'gpt2*'
+init_from = 'scratch' # 'scratch' or 'resume' or 'gpt2*'
 # wandb logging
 wandb_log = False # disabled by default
 wandb_project = 'owt'
@@ -51,11 +53,11 @@ wandb_run_name = 'gpt2' # 'run' + str(time.time())
 dataset = 'openwebtext'
 # gradient_accumulation_steps = 5 * 8 # used to simulate larger batch sizes
 gradient_accumulation_steps = 1 # used to simulate larger batch sizes
-batch_size = 2*12*40 # if gradient_accumulation_steps > 1, this is the micro-batch size
-block_size = 20
+batch_size = 1024 # if gradient_accumulation_steps > 1, this is the micro-batch size
+block_size = 16
 # model
-n_layer = 12
-n_head = 12
+n_layer = 8
+n_head = 4
 n_embd = 48
 dropout = 0.0 # for pretraining 0 is good, for finetuning try 0.1+
 bias = False # do we use bias inside LayerNorm and Linear layers?
@@ -116,79 +118,6 @@ device_type = 'cuda' if 'cuda' in device else 'cpu' # for later use in torch.aut
 ptdtype = {'float32': torch.float32, 'bfloat16': torch.bfloat16, 'float16': torch.float16}[dtype]
 ctx = nullcontext() if device_type == 'cpu' else torch.amp.autocast(device_type=device_type, dtype=ptdtype)
 
-# poor man's data loader
-char_to_tok = {"0":0, "1":1}
-meta_vocab_size = len(char_to_tok)
-wrong_list = []
-using_wrong_list = False
-min_len_wrong_list = batch_size//12
-# logarithmic_sampling = False
-def pad_to_len(s, pad, l):
-    pad_len = l - len(s)
-    if pad_len < 0:
-        print("ERROR!")
-        exit(-1)
-        return s[-l:]
-    return s + pad * pad_len 
-def tokenize(s):
-    ret = np.zeros(block_size, dtype=np.int64)
-    for (i, c) in enumerate(s):
-        ret[i] = char_to_tok[c]
-    return ret
-def get_sample():
-    global wrong_list
-    num_bits_a = 10
-    num_bits_b = 10
-    if using_wrong_list:
-        if len(wrong_list) != 0:
-            ret = wrong_list.pop()
-            return ret
-    # if logarithmic_sampling:
-    #     num_bits_a = random.randrange(0,11)
-    #     num_bits_b = random.randrange(0,11)
-    a = random.randrange(0,1<<num_bits_a)
-    b = random.randrange(0,1<<num_bits_b)
-    c = a + b
-    a_str = bin(a)[2:]
-    b_str = bin(b)[2:]
-    c_str = bin(c)[2:]
-    # c_str_len = len(c_str) + 1
-    # s = "{}+{}={} ".format(a_str, b_str, c_str)
-    # print("s: {}".format(s))
-    # next_c = s[y]
-    x = "{:>010}{:>010}".format(a_str, b_str)
-    y = "{:>020}".format(c_str)
-    # return np.zeros(block_size, dtype=np.int64),np.zeros(block_size, dtype=np.int64)
-    return tokenize(x), tokenize(y)
-def get_batch(split):
-    # data = train_data if split == 'train' else val_data
-    x_list = []
-    y_list = []
-    for _ in range(batch_size):
-        x0,y0 = get_sample()
-        x_list.append(x0)
-        y_list.append(y0)
-    # ix = torch.randint(len(data) - block_size, (batch_size,))
-    # x = torch.stack([torch.from_numpy((data[i:i+block_size]).astype(np.int64)) for i in ix])
-    # y = torch.stack([torch.from_numpy((data[i+1:i+1+block_size]).astype(np.int64)) for i in ix])
-
-    x = torch.stack([torch.from_numpy(x0) for x0 in x_list])
-    y = torch.stack([torch.from_numpy(y0) for y0 in y_list])
-    # x = torch.stack(x_list)
-    # y = torch.stack(y_list)
-
-    # y = torch.tensor(y_list)
-    if device_type == 'cuda':
-        # pin arrays x,y, which allows us to move them to GPU asynchronously (non_blocking=True)
-        x, y = x.pin_memory().to(device, non_blocking=True), y.pin_memory().to(device, non_blocking=True)
-    else:
-        x, y = x.to(device), y.to(device)
-    # print("X: {}".format(x))
-    # print("X.shape: {}".format(x.shape))
-    # print("Y: {}".format(y))
-    # print("Y.shape: {}".format(y.shape))
-    return x, y
-
 # init these up here, can override if init_from='resume' (i.e. from a checkpoint)
 iter_num = 0
 best_val_loss = 1e9
@@ -209,9 +138,9 @@ if init_from == 'scratch':
     # init a new model from scratch
     print("Initializing a new model from scratch")
     # determine the vocab size we'll use for from-scratch training
-    if meta_vocab_size is None:
+    if dataloader.meta_vocab_size is None:
         print("defaulting to vocab_size of GPT-2 to 50304 (50257 rounded up for efficiency)")
-    model_args['vocab_size'] = meta_vocab_size if meta_vocab_size is not None else 50304
+    model_args['vocab_size'] = dataloader.meta_vocab_size
     gptconf = GPTConfig(**model_args)
     model = GPT(gptconf)
 elif init_from == 'resume':
@@ -242,6 +171,8 @@ if block_size < model.config.block_size:
     model_args['block_size'] = block_size # so that the checkpoint will have the right value
 model.to(device)
 
+loader = dataloader.WrongListLoader(model, batch_size)
+
 # initialize a GradScaler. If enabled=False scaler is a no-op
 scaler = torch.cuda.amp.GradScaler(enabled=(dtype == 'float16'))
 
@@ -264,9 +195,8 @@ if ddp:
 # helps estimate an arbitrarily accurate loss over either split using many batches
 @torch.no_grad()
 def estimate_loss():
-    global using_wrong_list
-    using_wrong_list_cur = using_wrong_list
-    using_wrong_list = False
+    using_wrong_list_cur = loader.using_wrong_list
+    loader.using_wrong_list = False
     out_l = {}
     out_a = {}
     model.eval()
@@ -274,7 +204,7 @@ def estimate_loss():
         losses = torch.zeros(eval_iters)
         accs = torch.zeros(eval_iters)
         for k in range(eval_iters):
-            X, Y = get_batch(split)
+            X, Y = loader.get_batch()
             with ctx:
                 logits, loss = model(X, Y)
             losses[k] = loss.item()
@@ -283,36 +213,8 @@ def estimate_loss():
         out_l[split] = losses.mean()
         out_a[split] = accs.mean()
     model.train()
-    using_wrong_list = using_wrong_list_cur
+    loader.using_wrong_list = using_wrong_list_cur
     return out_l, out_a
-
-def fill_wrong_list():
-    model.eval()
-    using_wrong_list = False
-    iter_count = 0
-    while len(wrong_list) < min_len_wrong_list:
-        print(f"\tfill_wrong_list {iter_count}")
-        if iter_count >= 10000:
-            checkpoint = {
-                'model': raw_model.state_dict(),
-                'optimizer': optimizer.state_dict(),
-                'model_args': model_args,
-                'config': config,
-            }
-            torch.save(checkpoint, os.path.join(out_dir, 'complete-ckpt.pt'))
-            return True
-        iter_count += 1
-
-        with ctx:
-            logits, loss = model(X, Y)
-            Xc, Yc = X.cpu(), Y.cpu()
-            wrong_preds = (Y != logits.argmax(2)).sum(1).cpu()
-            for (i, x) in enumerate(wrong_preds):
-                if x.item() > 0:
-                    wrong_list.append((Xc[i].numpy(), Yc[i].numpy()))
-    model.train()
-    using_wrong_list = True
-    return False
 
 # learning rate decay scheduler (cosine with warmup)
 def get_lr(it):
@@ -334,13 +236,12 @@ if wandb_log and master_process:
     wandb.init(project=wandb_project, name=wandb_run_name, config=config)
 
 # training loop
-X, Y = get_batch('train') # fetch the very first batch
+X, Y = loader.get_batch() # fetch the very first batch
 t0 = time.time()
 local_iter_num = 0 # number of iterations in the lifetime of this process
 raw_model = model.module if ddp else model # unwrap DDP container if needed
 running_mfu = -1.0
 running_acc = 0.0
-len_wrong_list = len(wrong_list)
 while True:
 
     # determine and set the learning rate for this iteration
@@ -353,7 +254,7 @@ while True:
         losses, accs = estimate_loss()
         if accs['val'] > 0.99:
             # logarithmic_sampling = True
-            using_wrong_list = True
+            loader.set_using_wrong_list(True)
         print(f"step {iter_num}: train loss {losses['train']:.4f}, val loss {losses['val']:.4f}, acc {accs['val']:.4f}")
         if wandb_log:
             wandb.log({
@@ -392,18 +293,15 @@ while True:
         with ctx:
             logits, loss = model(X, Y)
             loss = loss / gradient_accumulation_steps # scale the loss to account for gradient accumulation
-            if using_wrong_list:
+            if loader.using_wrong_list:
                 Xc, Yc = X.cpu(), Y.cpu()
                 wrong_preds = (Y != logits.argmax(2)).sum(1).cpu()
                 for (i, x) in enumerate(wrong_preds):
                     if x.item() > 0:
-                        wrong_list.append((Xc[i].numpy(), Yc[i].numpy()))
+                        loader.add_wrong(Xc[i], Yc[i])
             running_acc = (Y == logits.argmax(2)).sum().item()/Y.numel()
         # immediately async prefetch next batch while model is doing the forward pass on the GPU
-        if using_wrong_list and len_wrong_list < min_len_wrong_list:
-            fill_wrong_list()
-        print("\tlen(wrong_list) = {}".format(len(wrong_list)))
-        X, Y = get_batch('train')
+        X, Y = loader.get_batch()
         # backward pass, with gradient scaling if training in fp16
         scaler.scale(loss).backward()
     # clip the gradient
@@ -427,7 +325,7 @@ while True:
         if local_iter_num >= 5: # let the training loop settle a bit
             mfu = raw_model.estimate_mfu(batch_size * gradient_accumulation_steps, dt)
             running_mfu = mfu if running_mfu == -1.0 else 0.9*running_mfu + 0.1*mfu
-        print(f"iter {iter_num}: loss {lossf:.4f}, acc {running_acc:.4f} time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}% {using_wrong_list}")
+        print(f"iter {iter_num}: loss {lossf:.4f}, acc {running_acc:.4f} time {dt*1000:.2f}ms, mfu {running_mfu*100:.2f}% {loader.using_wrong_list}")
     iter_num += 1
     local_iter_num += 1
 
